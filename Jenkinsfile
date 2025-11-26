@@ -43,10 +43,9 @@ pipeline {
 		stage('Build Docker Image') {
 			steps {
 				script {
-					def imageTag = "${env.DOCKER_NAMESPACE}/${env.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
-					env.IMAGE = imageTag
-					sh "docker build -t ${imageTag} ."
+					env.IMAGE = "${env.DOCKER_NAMESPACE}/${env.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
 				}
+				sh 'docker build -t $IMAGE .'
 			}
 		}
 
