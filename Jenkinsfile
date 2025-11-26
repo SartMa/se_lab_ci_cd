@@ -59,23 +59,23 @@ pipeline {
 						passwordVariable: 'DOCKERHUB_TOKEN'
 					)
 				]) {
-					sh '''
-						echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
-						docker push "$IMAGE"
+					sh """
+						echo "\$DOCKERHUB_TOKEN" | docker login -u "\$DOCKERHUB_USER" --password-stdin
+						docker push ${env.IMAGE}
 						docker logout
-					'''
+					"""
 				}
 			}
 		}
 
 		stage('Deploy Container') {
 			steps {
-				sh '''
-					docker pull "$IMAGE"
-					docker stop $CONTAINER_NAME || true
-					docker rm $CONTAINER_NAME || true
-					docker run -d --name $CONTAINER_NAME "$IMAGE"
-				'''
+				sh """
+					docker pull ${env.IMAGE}
+					docker stop ${env.CONTAINER_NAME} || true
+					docker rm ${env.CONTAINER_NAME} || true
+					docker run -d --name ${env.CONTAINER_NAME} ${env.IMAGE}
+				"""
 			}
 		}
 	}
