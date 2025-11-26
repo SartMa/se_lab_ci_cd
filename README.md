@@ -7,7 +7,10 @@ A simple Java-based command-line calculator application that supports basic arit
 [https://hub.docker.com/r/sartma/calculator](https://hub.docker.com/r/sartma/calculator)
 
 ![Pipeline Overview](pipeline_overview.png)
+*Figure 1: Jenkins Pipeline Overview*
+
 ![Build Success](build_success.png)
+*Figure 2: Successful build execution in Jenkins*
 
 ## Pipeline Overview
 
