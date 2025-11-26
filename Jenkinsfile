@@ -45,7 +45,9 @@ pipeline {
 				script {
 					env.IMAGE = "${env.DOCKER_NAMESPACE}/${env.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
 				}
-				sh 'docker build -t $IMAGE .'
+				sh """
+					docker build -t ${env.IMAGE} .
+				"""
 			}
 		}
 
@@ -58,23 +60,23 @@ pipeline {
 						passwordVariable: 'DOCKERHUB_TOKEN'
 					)
 				]) {
-					sh '''
+					sh """
 						echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
-						docker push $IMAGE
+						docker push ${env.IMAGE}
 						docker logout
-					'''
+					"""
 				}
 			}
 		}
 
 		stage('Deploy Container') {
 			steps {
-				sh '''
-					docker pull $IMAGE
+				sh """
+					docker pull ${env.IMAGE}
 					docker stop $CONTAINER_NAME || true
 					docker rm $CONTAINER_NAME || true
-					docker run -d --name $CONTAINER_NAME $IMAGE
-				'''
+					docker run -d --name $CONTAINER_NAME ${env.IMAGE}
+				"""
 			}
 		}
 	}
