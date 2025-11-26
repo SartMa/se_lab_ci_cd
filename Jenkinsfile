@@ -1,15 +1,12 @@
 pipeline {
 	agent any
 
-	parameters {
-		string(name: 'ROLL_NUMBER', defaultValue: 'imt2023014', description: 'Used for Docker Hub namespace/tag (lowercase recommended).')
-		string(name: 'DOCKER_REPOSITORY', defaultValue: 'calculator', description: 'Docker Hub repository that lives under your namespace.')
-	}
-
 	environment {
 		DOCKER_CREDENTIALS_ID = 'dockerhub-cred'
 		IMAGE = ''
 		CONTAINER_NAME = 'calculator-cli'
+		DOCKER_NAMESPACE = 'sartma'
+		DOCKER_REPOSITORY = 'calculator'
 	}
 
 	stages {
@@ -46,7 +43,7 @@ pipeline {
 		stage('Build Docker Image') {
 			steps {
 				script {
-					env.IMAGE = "${params.ROLL_NUMBER.toLowerCase()}/${params.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
+					env.IMAGE = "${env.DOCKER_NAMESPACE}/${env.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
 				}
 				sh 'docker build -t $IMAGE .'
 			}
