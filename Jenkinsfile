@@ -2,50 +2,57 @@ pipeline {
 	agent any
 
 	parameters {
-		string(name: 'ROLL_NUMBER', defaultValue: 'cs21b000', description: 'Used for Docker Hub namespace/tag (lowercase recommended).')
+		string(name: 'ROLL_NUMBER', defaultValue: 'imt2023014', description: 'Used for Docker Hub namespace/tag (lowercase recommended).')
 		string(name: 'DOCKER_REPOSITORY', defaultValue: 'calculator', description: 'Docker Hub repository that lives under your namespace.')
 	}
 
 	environment {
-		DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+		DOCKER_CREDENTIALS_ID = 'dockerhub-cred'
+		IMAGE = ''
+		CONTAINER_NAME = 'calculator-cli'
 	}
 
 	stages {
 		stage('Checkout') {
 			steps {
-				checkout scm
+				checkout([$class: 'GitSCM',
+  branches: [[name: '*/main']],
+  userRemoteConfigs: [[
+    url: 'https://github.com/SartMa/se_lab_ci_cd.git',
+    credentialsId: 'github-cred'
+  ]]
+])
 			}
 		}
 
-		stage('Compile') {
+		stage('Prepare Workspace') {
 			steps {
 				sh 'rm -f *.class'
+			}
+		}
+
+		stage('Build Application') {
+			steps {
 				sh 'javac Calculator.java CalculatorTest.java'
 			}
 		}
 
-		stage('Unit Tests') {
+		stage('Run Tests') {
 			steps {
 				sh 'java CalculatorTest'
 			}
 		}
 
-		stage('Docker Image Tag') {
+		stage('Build Docker Image') {
 			steps {
 				script {
-					env.DOCKER_IMAGE = "${params.ROLL_NUMBER.toLowerCase()}/${params.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
+					env.IMAGE = "${params.ROLL_NUMBER.toLowerCase()}/${params.DOCKER_REPOSITORY}:${env.BUILD_NUMBER}"
 				}
+				sh 'docker build -t $IMAGE .'
 			}
 		}
 
-		stage('Docker Build') {
-			steps {
-				sh 'docker build -t $DOCKER_IMAGE .'
-				sh 'docker images | grep $DOCKER_IMAGE'
-			}
-		}
-
-		stage('Docker Push') {
+		stage('Push Docker Image') {
 			steps {
 				withCredentials([
 					usernamePassword(
@@ -54,10 +61,23 @@ pipeline {
 						passwordVariable: 'DOCKERHUB_TOKEN'
 					)
 				]) {
-					sh 'echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin'
-					sh 'docker push $DOCKER_IMAGE'
-					sh 'docker logout'
+					sh '''
+						echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
+						docker push $IMAGE
+						docker logout
+					'''
 				}
+			}
+		}
+
+		stage('Deploy Container') {
+			steps {
+				sh '''
+					docker pull $IMAGE
+					docker stop $CONTAINER_NAME || true
+					docker rm $CONTAINER_NAME || true
+					docker run -d --name $CONTAINER_NAME $IMAGE
+				'''
 			}
 		}
 	}
