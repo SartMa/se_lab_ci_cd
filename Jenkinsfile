@@ -3,7 +3,6 @@ pipeline {
 
 	environment {
 		DOCKER_CREDENTIALS_ID = 'dockerhub-cred'
-		IMAGE = ''
 		CONTAINER_NAME = 'calculator-cli'
 		DOCKER_NAMESPACE = 'sartma'
 		DOCKER_REPOSITORY = 'calculator'
